@@ -35,7 +35,7 @@ class InterfaceYouTube:
         self.frame = ttk.Frame(self.janela, padding="10")
         self.frame.pack(fill=tk.BOTH, expand=True)
 
-        label_title = ttk.Label(self.frame, text="Baixe vídeos do YouTube, Instagram e Facebook", font=("Arial", 14, "bold"))
+        label_title = ttk.Label(self.frame, text="Baixe vídeos do YouTube e Instagram", font=("Arial", 14, "bold"))
         label_title.grid(row=0, column=1, columnspan=3, pady=10)
 
         label_url = ttk.Label(self.frame, text="Cole a URL do vídeo:", font=("Arial", 12))
