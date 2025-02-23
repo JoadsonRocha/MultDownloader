@@ -1,4 +1,3 @@
-# interface.py
 from ttkthemes import ThemedTk
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
@@ -49,7 +48,7 @@ class InterfaceYouTube:
         label_qualidade.grid(row=2, column=0, sticky="w", padx=10, pady=5)
 
         self.qualidade = tk.StringVar(value="best")
-        opcoes_qualidade = ["Melhor qualidade", "1080p", "720p", "480p", "360p", "Somente Áudio"]
+        opcoes_qualidade = ["Padrão", "1080p", "720p", "480p", "360p", "Somente Áudio"]
         self.combo_qualidade = ttk.Combobox(self.frame, textvariable=self.qualidade, values=opcoes_qualidade, state="readonly", font=("Arial", 12))
         self.combo_qualidade.grid(row=2, column=1, sticky="w", padx=(0, 10), pady=5)
         self.combo_qualidade.current(0)
@@ -77,7 +76,7 @@ class InterfaceYouTube:
 
         # Mapeamento das opções de qualidade
         qualidade_selecionada = self.qualidade.get()
-        if qualidade_selecionada == "Melhor qualidade":
+        if qualidade_selecionada == "Padrão":
             qualidade = "best"
         elif qualidade_selecionada == "1080p":
             qualidade = "1080p"

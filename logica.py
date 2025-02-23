@@ -1,23 +1,12 @@
-# logica.py
 from yt_dlp import YoutubeDL
 import shutil
-import os
 
 class BaixadorYouTube:
     def __init__(self, atualizar_interface_callback):
         self.atualizar_interface_callback = atualizar_interface_callback
-        self.ffmpeg_path = self.encontrar_ffmpeg()
-
-    def encontrar_ffmpeg(self):
-        """Verifica se o FFmpeg está disponível e retorna seu caminho."""
-        caminho = shutil.which("ffmpeg")
-        if caminho:
-            return caminho
-        return None
 
     def verificar_ffmpeg(self):
-        """Retorna erro se o FFmpeg não for encontrado."""
-        if not self.ffmpeg_path:
+        if shutil.which("ffmpeg") is None:
             return "Erro: FFmpeg não encontrado. Certifique-se de que está instalado e no PATH."
         return None
 
@@ -34,20 +23,26 @@ class BaixadorYouTube:
             if erro_ffmpeg:
                 return erro_ffmpeg
 
-            if qualidade == "somente áudio":
-                formato = "bestaudio"
-                extensao = "mp3"
-            else:
-                formato = f"{qualidade}+bestaudio/best"
-                extensao = "mp4"
+            # Mapeamento de qualidade para formatos suportados pelo yt-dlp
+            qualidade_map = {
+                "Padrão": "best",
+                "1080p": "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+                "720p": "bestvideo[height<=720]+bestaudio/best[height<=720]",
+                "480p": "bestvideo[height<=480]+bestaudio/best[height<=480]",
+                "360p": "bestvideo[height<=360]+bestaudio/best[height<=360]",
+                "somente áudio": "bestaudio"
+            }
+
+            formato = qualidade_map.get(qualidade, "best")
+            extensao = "mp3" if qualidade == "somente áudio" else "mp4"
 
             ydl_opts = {
                 'format': formato,
-                'outtmpl': os.path.join(local_salvar, '%(title)s.' + extensao),
+                'outtmpl': f'{local_salvar}/%(title)s.{extensao}',
                 'noplaylist': True,
                 'progress_hooks': [self.atualizar_progresso],
                 'merge_output_format': extensao,
-                'ffmpeg_location': self.ffmpeg_path,  # Referência explícita ao FFmpeg
+                'ffmpeg_location': shutil.which("ffmpeg"),
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
