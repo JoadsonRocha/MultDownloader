@@ -44,6 +44,9 @@ class InterfaceYouTube:
         self.entry_url = ttk.Entry(self.frame, font=("Arial", 12), width=40)
         self.entry_url.grid(row=1, column=1, padx=(0, 10), pady=5)
 
+        # Adicionar menu de contexto ao campo de entrada
+        self.criar_menu_contexto(self.entry_url)
+
         label_qualidade = ttk.Label(self.frame, text="Selecione a qualidade:", font=("Arial", 12))
         label_qualidade.grid(row=2, column=0, sticky="w", padx=10, pady=5)
 
@@ -61,6 +64,20 @@ class InterfaceYouTube:
 
         label_rodape = ttk.Label(self.frame, text="by Joadson copy 2025", font=("Arial", 10), foreground="gray")
         label_rodape.grid(row=5, column=1, columnspan=2, pady=10, sticky="s")
+
+    def criar_menu_contexto(self, widget):
+        """
+        Cria um menu de contexto para o widget especificado.
+        """
+        menu_contexto = tk.Menu(widget, tearoff=0)
+        menu_contexto.add_command(label="Colar", command=lambda: widget.event_generate('<<Paste>>'))
+        menu_contexto.add_command(label="Copiar", command=lambda: widget.event_generate('<<Copy>>'))
+        menu_contexto.add_command(label="Recortar", command=lambda: widget.event_generate('<<Cut>>'))
+
+        def mostrar_menu(event):
+            menu_contexto.tk.call("tk_popup", menu_contexto, event.x_root, event.y_root)
+
+        widget.bind("<Button-3>", mostrar_menu)  # Botão direito do mouse
 
     def atualizar_interface(self, percentual, velocidade, tamanho):
         self.label_status.config(text=f"Baixando... {percentual} | Velocidade: {velocidade} | Tamanho: {tamanho}")
