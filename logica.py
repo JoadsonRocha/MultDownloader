@@ -1,13 +1,15 @@
 from yt_dlp import YoutubeDL
 import shutil
+import os
 
 class BaixadorYouTube:
     def __init__(self, atualizar_interface_callback):
         self.atualizar_interface_callback = atualizar_interface_callback
+        self.ffmpeg_path = os.path.join(os.getcwd(), 'ffmpeg', 'bin', 'ffmpeg.exe')  # Caminho do FFmpeg local
 
     def verificar_ffmpeg(self):
-        if shutil.which("ffmpeg") is None:
-            return "Erro: FFmpeg não encontrado. Certifique-se de que está instalado e no PATH."
+        if not os.path.exists(self.ffmpeg_path):  # Verifica se o FFmpeg existe no caminho local
+            return "Erro: FFmpeg não encontrado na pasta local."
         return None
 
     def atualizar_progresso(self, d):
@@ -42,7 +44,7 @@ class BaixadorYouTube:
                 'noplaylist': True,
                 'progress_hooks': [self.atualizar_progresso],
                 'merge_output_format': extensao,
-                'ffmpeg_location': shutil.which("ffmpeg"),
+                'ffmpeg_location': self.ffmpeg_path,  # Usa o FFmpeg local
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',

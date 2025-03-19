@@ -16,7 +16,6 @@ class InterfaceYouTube:
 
         try:
             # Caminho absoluto para o ícone
-            
             caminho_icone = os.path.abspath("logo.ico")
             # Carrega a imagem usando Pillow
             icon_image = Image.open(caminho_icone)
