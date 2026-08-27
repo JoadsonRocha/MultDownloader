@@ -1,0 +1,11 @@
+# MultDownloader - Dependências do Projeto
+# Instale utilizando: pip install -r requirements.txt
+
+# Mecanismo de download de mídias (YouTube, Instagram, Facebook, TikTok, etc.)
+yt-dlp>=2025.1.15
+
+# Manipulação de imagens e ícones para a interface gráfica
+Pillow>=10.0.0
+
+# Temas visuais modernos para a interface Tkinter
+ttkthemes>=3.2.2
