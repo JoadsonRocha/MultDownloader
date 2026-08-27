@@ -1,9 +1,9 @@
 """
-Módulo de Interface Gráfica (MultDownloader)
-============================================
-Interface moderna desenvolvida em Tkinter com suporte a temas estilizados,
-barra de progresso em tempo real, telemetria de download, prévia de vídeo,
-seleção persistente de pasta e total segurança de threads.
+Módulo de Interface Gráfica Moderna (MultDownloader)
+===================================================
+Interface visual moderna inspirada nas diretrizes de design do Bootstrap 5 Dark,
+desenvolvida com CustomTkinter para proporcionar uma experiência de usuário (UX)
+fluida, responsiva e com componentes visuais elegantes.
 
 Autor: Joadson Rocha / MultDownloader Team
 Licença: MIT
@@ -15,40 +15,54 @@ import subprocess
 import threading
 import queue
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import filedialog, messagebox
 from typing import Optional, Dict, Any
 
+import customtkinter as ctk
 from PIL import Image, ImageTk
-from ttkthemes import ThemedTk
 from logica import BaixadorYouTube
 
+# Configuração global de tema CustomTkinter
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 
-class InterfaceYouTube:
-    """Interface principal do aplicativo MultDownloader."""
 
-    # Paleta de cores moderna (Dark Slate / Teal Theme)
-    BG_DARK = "#1E222B"
-    BG_CARD = "#282C34"
-    BG_INPUT = "#323842"
-    TEXT_PRIMARY = "#ECEFF4"
-    TEXT_SECONDARY = "#ABB2BF"
-    ACCENT_CYAN = "#00ADB5"
-    ACCENT_HOVER = "#008B94"
-    ACCENT_DANGER = "#E06C75"
-    ACCENT_DANGER_HOVER = "#C6535C"
-    ACCENT_SUCCESS = "#98C379"
+class InterfaceYouTube(ctk.CTk):
+    """Janela principal da aplicação MultDownloader com estética Bootstrap 5 Dark."""
 
-    def __init__(self, janela: ThemedTk):
-        self.janela = janela
-        self.janela.title("MultDownloader - Baixador Universal de Mídias")
-        self.janela.geometry("860x490")
-        self.janela.minsize(800, 470)
-        self.janela.configure(bg=self.BG_DARK)
+    # Paleta de cores Bootstrap 5 Dark
+    BS_BG_ROOT = "#0F1216"        # Fundo da janela (Dark Canvas)
+    BS_BG_CARD = "#181C22"        # Superfície dos cards (Card Surface)
+    BS_BG_CARD_ALT = "#13161B"    # Superfície do card de prévia
+    BS_BG_INPUT = "#21262D"       # Fundo dos inputs (Form Control)
+    BS_BORDER_CARD = "#2E3440"    # Borda sutil de cards
+    BS_BORDER_INPUT = "#3B4252"   # Borda de inputs
+    BS_TEXT_WHITE = "#F8F9FA"     # Texto principal
+    BS_TEXT_MUTED = "#9DA5B4"     # Texto secundário/muted
+    
+    # Cores de Ação do Bootstrap
+    BS_PRIMARY = "#0D6EFD"        # Azul Bootstrap (btn-primary)
+    BS_PRIMARY_HOVER = "#0B5ED7"
+    BS_SECONDARY = "#343A40"      # Cinza escuro (btn-secondary)
+    BS_SECONDARY_HOVER = "#495057"
+    BS_SUCCESS = "#198754"        # Verde (badge-success)
+    BS_DANGER = "#DC3545"         # Vermelho (btn-danger)
+    BS_DANGER_HOVER = "#BB2D3B"
+    BS_INFO = "#0DCAF0"           # Ciano (info)
 
-        # Fila thread-safe para comunicação entre threads secundárias e a GUI
+    def __init__(self):
+        super().__init__()
+
+        # Configurações da Janela
+        self.title("MultDownloader - Baixador Universal de Mídias")
+        self.geometry("880x560")
+        self.minsize(840, 520)
+        self.configure(fg_color=self.BS_BG_ROOT)
+
+        # Fila thread-safe de eventos de interface
         self.fila_gui: queue.Queue = queue.Queue()
 
-        # Instância do mecanismo de download
+        # Mecanismo de download
         self.baixador = BaixadorYouTube(callback_progresso=self._enfileirar_progresso)
         self.download_em_andamento = False
         self.thread_ativa: Optional[threading.Thread] = None
@@ -60,177 +74,227 @@ class InterfaceYouTube:
 
         self._configurar_icone()
         self._centralizar_janela()
-        self._configurar_estilos()
-        self._criar_widgets()
+        self._criar_interface_bootstrap()
         self._iniciar_escuta_fila()
 
-        # Intercepta evento de fechar janela
-        self.janela.protocol("WM_DELETE_WINDOW", self._ao_fechar_janela)
+        # Intercepta evento de fechamento
+        self.protocol("WM_DELETE_WINDOW", self._ao_fechar_janela)
 
     def _configurar_icone(self):
-        """Carrega o ícone da aplicação com suporte a Pillow e fallback gracioso."""
+        """Define o ícone oficial da janela com tratamento multiplataforma."""
         try:
             caminho_icone = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo.ico")
             if os.path.exists(caminho_icone):
                 if sys.platform.startswith('win'):
-                    self.janela.iconbitmap(caminho_icone)
+                    self.iconbitmap(caminho_icone)
                 else:
-                    icon_image = Image.open(caminho_icone)
-                    icon_photo = ImageTk.PhotoImage(icon_image)
-                    self.janela.iconphoto(True, icon_photo)
+                    img = Image.open(caminho_icone)
+                    self.iconphoto(True, ImageTk.PhotoImage(img))
         except Exception as e:
-            print(f"[Aviso] Não foi possível carregar o ícone: {e}")
+            print(f"[Aviso] Ícone não carregado: {e}")
 
     def _centralizar_janela(self):
         """Centraliza a janela na tela do usuário."""
-        self.janela.update_idletasks()
-        largura = 860
-        altura = 490
-        x = max(0, (self.janela.winfo_screenwidth() // 2) - (largura // 2))
-        y = max(0, (self.janela.winfo_screenheight() // 2) - (altura // 2))
-        self.janela.geometry(f"{largura}x{altura}+{x}+{y}")
+        self.update_idletasks()
+        largura = 880
+        altura = 560
+        x = max(0, (self.winfo_screenwidth() // 2) - (largura // 2))
+        y = max(0, (self.winfo_screenheight() // 2) - (altura // 2))
+        self.geometry(f"{largura}x{altura}+{x}+{y}")
 
-    def _configurar_estilos(self):
-        """Configura a estilização customizada dos componentes ttk."""
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
-
-        # Configurações globais
-        self.style.configure('.', background=self.BG_DARK, foreground=self.TEXT_PRIMARY)
-        self.style.configure('TFrame', background=self.BG_DARK)
-        self.style.configure('Card.TFrame', background=self.BG_CARD)
-
-        # Rótulos (Labels)
-        self.style.configure('Header.TLabel', background=self.BG_DARK, foreground=self.TEXT_PRIMARY, font=('Helvetica', 16, 'bold'))
-        self.style.configure('Subtitle.TLabel', background=self.BG_DARK, foreground=self.TEXT_SECONDARY, font=('Helvetica', 10))
-        self.style.configure('Card.TLabel', background=self.BG_CARD, foreground=self.TEXT_PRIMARY, font=('Helvetica', 10))
-        self.style.configure('CardBold.TLabel', background=self.BG_CARD, foreground=self.TEXT_PRIMARY, font=('Helvetica', 10, 'bold'))
-        self.style.configure('CardMuted.TLabel', background=self.BG_CARD, foreground=self.TEXT_SECONDARY, font=('Helvetica', 9))
-        self.style.configure('Telemetry.TLabel', background=self.BG_DARK, foreground=self.TEXT_SECONDARY, font=('Consolas', 9))
-        self.style.configure('Status.TLabel', background=self.BG_DARK, foreground=self.ACCENT_CYAN, font=('Helvetica', 10, 'bold'))
-
-        # Entradas (Entry)
-        self.style.configure('TEntry', fieldbackground=self.BG_INPUT, foreground=self.TEXT_PRIMARY, insertcolor='white', borderwidth=1)
-
-        # Combobox
-        self.style.configure('TCombobox', fieldbackground=self.BG_INPUT, foreground=self.TEXT_PRIMARY, background=self.BG_CARD, arrowcolor=self.ACCENT_CYAN)
-        self.style.map('TCombobox',
-                       fieldbackground=[('readonly', self.BG_INPUT)],
-                       foreground=[('readonly', self.TEXT_PRIMARY)])
-
-        # Botões Principais (Action Button)
-        self.style.configure('Primary.TButton',
-                             background=self.ACCENT_CYAN,
-                             foreground='white',
-                             font=('Helvetica', 10, 'bold'),
-                             padding=6,
-                             borderwidth=0)
-        self.style.map('Primary.TButton',
-                       background=[('active', self.ACCENT_HOVER), ('disabled', '#3E4451')],
-                       foreground=[('disabled', '#6B7280')])
-
-        # Botão Secundário / Utilitário
-        self.style.configure('Secondary.TButton',
-                             background=self.BG_INPUT,
-                             foreground=self.TEXT_PRIMARY,
-                             font=('Helvetica', 9),
-                             padding=5,
-                             borderwidth=0)
-        self.style.map('Secondary.TButton',
-                       background=[('active', '#434A56'), ('disabled', '#252A32')],
-                       foreground=[('disabled', '#5C6370')])
-
-        # Botão de Perigo / Cancelar
-        self.style.configure('Danger.TButton',
-                             background=self.ACCENT_DANGER,
-                             foreground='white',
-                             font=('Helvetica', 10, 'bold'),
-                             padding=6,
-                             borderwidth=0)
-        self.style.map('Danger.TButton',
-                       background=[('active', self.ACCENT_DANGER_HOVER), ('disabled', '#3E4451')],
-                       foreground=[('disabled', '#6B7280')])
-
-        # Barra de Progresso
-        self.style.configure('Custom.Horizontal.TProgressbar',
-                             troughcolor=self.BG_INPUT,
-                             background=self.ACCENT_CYAN,
-                             thickness=14,
-                             borderwidth=0)
-
-    def _criar_widgets(self):
-        """Monta a estrutura visual e componentes da interface."""
-        conteiner = ttk.Frame(self.janela, padding="16")
-        conteiner.pack(fill=tk.BOTH, expand=True)
+    def _criar_interface_bootstrap(self):
+        """Constrói a interface baseada em cards e componentes do Bootstrap 5."""
+        
+        # Conteiner Principal (Container fluid com padding)
+        self.container_principal = ctk.CTkFrame(self, fg_color="transparent")
+        self.container_principal.pack(fill="both", expand=True, padx=20, pady=16)
 
         # ==========================================
-        # 1. CABEÇALHO (Header)
+        # 1. HEADER / NAVBAR (Logo, Título e Badge)
         # ==========================================
-        frame_header = ttk.Frame(conteiner)
-        frame_header.pack(fill=tk.X, pady=(0, 12))
+        frame_header = ctk.CTkFrame(self.container_principal, fg_color="transparent")
+        frame_header.pack(fill="x", pady=(0, 12))
 
-        lbl_titulo = ttk.Label(frame_header, text="⚡ MultDownloader", style='Header.TLabel')
-        lbl_titulo.pack(side=tk.LEFT)
+        # Título com Ícone
+        frame_titulo = ctk.CTkFrame(frame_header, fg_color="transparent")
+        frame_titulo.pack(side="left")
 
-        # Indicador de status do FFmpeg
+        lbl_logo = ctk.CTkLabel(
+            frame_titulo,
+            text="⚡ MultDownloader",
+            font=ctk.CTkFont(family="Segoe UI", size=20, weight="bold"),
+            text_color=self.BS_TEXT_WHITE
+        )
+        lbl_logo.pack(anchor="w")
+
+        lbl_sub = ctk.CTkLabel(
+            frame_titulo,
+            text="Baixe vídeos e áudios de YouTube, Instagram, TikTok, Facebook e mais.",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+            text_color=self.BS_TEXT_MUTED
+        )
+        lbl_sub.pack(anchor="w")
+
+        # Badge Pill do FFmpeg (Status)
         disponivel_ffmpeg, _ = self.baixador.verificar_ffmpeg()
-        status_ffmpeg_texto = "✓ FFmpeg Ativo" if disponivel_ffmpeg else "⚠ FFmpeg Não Detectado"
-        status_ffmpeg_cor = self.ACCENT_SUCCESS if disponivel_ffmpeg else self.ACCENT_DANGER
-        self.lbl_ffmpeg = tk.Label(frame_header, text=status_ffmpeg_texto, bg=self.BG_DARK, fg=status_ffmpeg_cor, font=('Helvetica', 9, 'bold'))
-        self.lbl_ffmpeg.pack(side=tk.RIGHT, pady=4)
+        texto_badge = "✓ FFmpeg Ativo" if disponivel_ffmpeg else "⚠ FFmpeg Ausente"
+        cor_badge = self.BS_SUCCESS if disponivel_ffmpeg else self.BS_DANGER
 
-        lbl_sub = ttk.Label(conteiner, text="Baixe vídeos e extraia áudios de YouTube, Instagram, Facebook, TikTok, Twitter/X e mais.", style='Subtitle.TLabel')
-        lbl_sub.pack(anchor="w", pady=(0, 12))
+        self.badge_ffmpeg = ctk.CTkLabel(
+            frame_header,
+            text=texto_badge,
+            fg_color=cor_badge,
+            text_color="white",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            corner_radius=12,
+            padx=12,
+            pady=4
+        )
+        self.badge_ffmpeg.pack(side="right", pady=4)
 
         # ==========================================
-        # 2. CAMPO DE URL COM AÇÕES RÁPIDAS
+        # 2. CARD DE ENTRADA DE URL (Input Group)
         # ==========================================
-        frame_url = ttk.Frame(conteiner)
-        frame_url.pack(fill=tk.X, pady=(0, 10))
+        card_url = ctk.CTkFrame(
+            self.container_principal,
+            fg_color=self.BS_BG_CARD,
+            border_color=self.BS_BORDER_CARD,
+            border_width=1,
+            corner_radius=10
+        )
+        card_url.pack(fill="x", pady=(0, 12), padx=0)
 
-        lbl_url = ttk.Label(frame_url, text="URL da Mídia:", style='TLabel', font=('Helvetica', 10, 'bold'))
-        lbl_url.pack(anchor="w", pady=(0, 4))
+        inner_url = ctk.CTkFrame(card_url, fg_color="transparent")
+        inner_url.pack(fill="x", padx=14, pady=12)
 
-        frame_url_input = ttk.Frame(frame_url)
-        frame_url_input.pack(fill=tk.X)
+        lbl_url = ctk.CTkLabel(
+            inner_url,
+            text="URL da Mídia (Vídeo / Áudio):",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=self.BS_TEXT_WHITE
+        )
+        lbl_url.pack(anchor="w", pady=(0, 6))
+
+        # Input Row (Entry + Colar + Limpar)
+        frame_input_row = ctk.CTkFrame(inner_url, fg_color="transparent")
+        frame_input_row.pack(fill="x")
 
         self.var_url = tk.StringVar()
-        self.entry_url = ttk.Entry(frame_url_input, textvariable=self.var_url, font=("Helvetica", 11))
-        self.entry_url.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6), ipady=3)
+        self.entry_url = ctk.CTkEntry(
+            frame_input_row,
+            textvariable=self.var_url,
+            placeholder_text="Cole o link aqui (ex: https://www.youtube.com/watch?v=...)",
+            placeholder_text_color=self.BS_TEXT_MUTED,
+            fg_color=self.BS_BG_INPUT,
+            border_color=self.BS_BORDER_INPUT,
+            border_width=1,
+            text_color=self.BS_TEXT_WHITE,
+            font=ctk.CTkFont(family="Segoe UI", size=13),
+            corner_radius=8,
+            height=38
+        )
+        self.entry_url.pack(side="left", fill="x", expand=True, padx=(0, 8))
         self._criar_menu_contexto(self.entry_url)
 
-        self.btn_colar = ttk.Button(frame_url_input, text="📋 Colar", style='Secondary.TButton', command=self._acao_colar_url)
-        self.btn_colar.pack(side=tk.LEFT, padx=(0, 4))
+        # Botão Colar (btn-primary outline ou sólido)
+        self.btn_colar = ctk.CTkButton(
+            frame_input_row,
+            text="📋 Colar",
+            command=self._acao_colar_url,
+            fg_color=self.BS_PRIMARY,
+            hover_color=self.BS_PRIMARY_HOVER,
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            corner_radius=8,
+            height=38,
+            width=90
+        )
+        self.btn_colar.pack(side="left", padx=(0, 6))
 
-        self.btn_limpar = ttk.Button(frame_url_input, text="✕", width=3, style='Secondary.TButton', command=self._acao_limpar_url)
-        self.btn_limpar.pack(side=tk.LEFT)
+        # Botão Limpar (btn-secondary)
+        self.btn_limpar = ctk.CTkButton(
+            frame_input_row,
+            text="✕",
+            command=self._acao_limpar_url,
+            fg_color=self.BS_SECONDARY,
+            hover_color=self.BS_SECONDARY_HOVER,
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            corner_radius=8,
+            height=38,
+            width=40
+        )
+        self.btn_limpar.pack(side="left")
 
         # ==========================================
-        # 3. CARD DE PRÉVIA DA MÍDIA (Info Box)
+        # 3. CARD DE PRÉVIA DA MÍDIA (Media Box)
         # ==========================================
-        self.frame_preview = ttk.Frame(conteiner, style='Card.TFrame', padding="10")
-        self.frame_preview.pack(fill=tk.X, pady=(0, 10))
+        self.card_preview = ctk.CTkFrame(
+            self.container_principal,
+            fg_color=self.BS_BG_CARD_ALT,
+            border_color=self.BS_BORDER_CARD,
+            border_width=1,
+            corner_radius=8
+        )
+        self.card_preview.pack(fill="x", pady=(0, 12))
 
-        self.lbl_prev_titulo = ttk.Label(self.frame_preview, text="Cole um link acima para identificar a mídia...", style='CardBold.TLabel', wraplength=800)
-        self.lbl_prev_titulo.pack(anchor="w")
+        inner_preview = ctk.CTkFrame(self.card_preview, fg_color="transparent")
+        inner_preview.pack(fill="x", padx=14, pady=10)
 
-        self.lbl_prev_detalhes = ttk.Label(self.frame_preview, text="Plataformas suportadas: YouTube, Instagram, Facebook, TikTok, etc.", style='CardMuted.TLabel')
-        self.lbl_prev_detalhes.pack(anchor="w", pady=(2, 0))
+        # Título da Mídia
+        self.lbl_prev_titulo = ctk.CTkLabel(
+            inner_preview,
+            text="Cole um link acima para identificar a mídia...",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=self.BS_TEXT_WHITE,
+            anchor="w",
+            wraplength=800
+        )
+        self.lbl_prev_titulo.pack(fill="x", anchor="w")
+
+        # Badges de Informações (Canal, Duração, Origem)
+        self.frame_badges_info = ctk.CTkFrame(inner_preview, fg_color="transparent")
+        self.frame_badges_info.pack(fill="x", anchor="w", pady=(6, 0))
+
+        self.lbl_info_detalhes = ctk.CTkLabel(
+            self.frame_badges_info,
+            text="Suporta: YouTube, Instagram, Facebook, TikTok, Twitter/X, SoundCloud e mais.",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            text_color=self.BS_TEXT_MUTED,
+            anchor="w"
+        )
+        self.lbl_info_detalhes.pack(side="left")
 
         # ==========================================
-        # 4. OPÇÕES: QUALIDADE E PASTA DE DESTINO
+        # 4. CARD DE CONFIGURAÇÕES (Form Controls)
         # ==========================================
-        frame_opcoes = ttk.Frame(conteiner)
-        frame_opcoes.pack(fill=tk.X, pady=(0, 12))
+        card_opcoes = ctk.CTkFrame(
+            self.container_principal,
+            fg_color=self.BS_BG_CARD,
+            border_color=self.BS_BORDER_CARD,
+            border_width=1,
+            corner_radius=10
+        )
+        card_opcoes.pack(fill="x", pady=(0, 12))
 
-        # Coluna Qualidade
-        frame_qualidade = ttk.Frame(frame_opcoes)
-        frame_qualidade.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        inner_opcoes = ctk.CTkFrame(card_opcoes, fg_color="transparent")
+        inner_opcoes.pack(fill="x", padx=14, pady=12)
 
-        lbl_qualidade = ttk.Label(frame_qualidade, text="Formato / Resolução:", font=('Helvetica', 10, 'bold'))
+        # Grid com 2 Colunas: Qualidade e Destino
+        inner_opcoes.columnconfigure(0, weight=1)
+        inner_opcoes.columnconfigure(1, weight=2)
+
+        # Coluna 1: Qualidade / Resolução
+        frame_col_qualidade = ctk.CTkFrame(inner_opcoes, fg_color="transparent")
+        frame_col_qualidade.grid(row=0, column=0, sticky="ew", padx=(0, 12))
+
+        lbl_qualidade = ctk.CTkLabel(
+            frame_col_qualidade,
+            text="Formato / Resolução:",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            text_color=self.BS_TEXT_WHITE
+        )
         lbl_qualidade.pack(anchor="w", pady=(0, 4))
 
-        opcoes_qualidade = [
+        self.opcoes_qualidade = [
             "Melhor Qualidade (Auto)",
             "1080p Full HD",
             "720p HD",
@@ -240,70 +304,190 @@ class InterfaceYouTube:
             "Áudio MP3 (192 kbps)",
             "Áudio M4A / AAC"
         ]
-        self.var_qualidade = tk.StringVar(value=opcoes_qualidade[0])
-        self.combo_qualidade = ttk.Combobox(frame_qualidade, textvariable=self.var_qualidade, values=opcoes_qualidade, state="readonly", font=("Helvetica", 10))
-        self.combo_qualidade.pack(fill=tk.X, ipady=3)
+        self.var_qualidade = tk.StringVar(value=self.opcoes_qualidade[0])
+        self.combo_qualidade = ctk.CTkOptionMenu(
+            frame_col_qualidade,
+            variable=self.var_qualidade,
+            values=self.opcoes_qualidade,
+            fg_color=self.BS_BG_INPUT,
+            button_color=self.BS_SECONDARY,
+            button_hover_color=self.BS_SECONDARY_HOVER,
+            dropdown_fg_color=self.BS_BG_CARD,
+            dropdown_hover_color=self.BS_PRIMARY,
+            text_color=self.BS_TEXT_WHITE,
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+            dropdown_font=ctk.CTkFont(family="Segoe UI", size=12),
+            corner_radius=8,
+            height=36
+        )
+        self.combo_qualidade.pack(fill="x")
 
-        # Coluna Pasta de Destino
-        frame_pasta = ttk.Frame(frame_opcoes)
-        frame_pasta.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        # Coluna 2: Pasta de Destino
+        frame_col_pasta = ctk.CTkFrame(inner_opcoes, fg_color="transparent")
+        frame_col_pasta.grid(row=0, column=1, sticky="ew")
 
-        lbl_pasta = ttk.Label(frame_pasta, text="Salvar em:", font=('Helvetica', 10, 'bold'))
+        lbl_pasta = ctk.CTkLabel(
+            frame_col_pasta,
+            text="Pasta de Destino:",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            text_color=self.BS_TEXT_WHITE
+        )
         lbl_pasta.pack(anchor="w", pady=(0, 4))
 
-        frame_pasta_input = ttk.Frame(frame_pasta)
-        frame_pasta_input.pack(fill=tk.X)
+        frame_pasta_inputs = ctk.CTkFrame(frame_col_pasta, fg_color="transparent")
+        frame_pasta_inputs.pack(fill="x")
 
         self.var_pasta = tk.StringVar(value=self.pasta_padrao)
-        self.entry_pasta = ttk.Entry(frame_pasta_input, textvariable=self.var_pasta, font=("Helvetica", 9))
-        self.entry_pasta.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4), ipady=3)
+        self.entry_pasta = ctk.CTkEntry(
+            frame_pasta_inputs,
+            textvariable=self.var_pasta,
+            fg_color=self.BS_BG_INPUT,
+            border_color=self.BS_BORDER_INPUT,
+            border_width=1,
+            text_color=self.BS_TEXT_WHITE,
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            corner_radius=8,
+            height=36
+        )
+        self.entry_pasta.pack(side="left", fill="x", expand=True, padx=(0, 6))
 
-        self.btn_pasta = ttk.Button(frame_pasta_input, text="📁 Procurar", style='Secondary.TButton', command=self._acao_selecionar_pasta)
-        self.btn_pasta.pack(side=tk.LEFT, padx=(0, 4))
+        self.btn_procurar = ctk.CTkButton(
+            frame_pasta_inputs,
+            text="📁 Procurar",
+            command=self._acao_selecionar_pasta,
+            fg_color=self.BS_SECONDARY,
+            hover_color=self.BS_SECONDARY_HOVER,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            corner_radius=8,
+            height=36,
+            width=85
+        )
+        self.btn_procurar.pack(side="left", padx=(0, 4))
 
-        self.btn_abrir_pasta = ttk.Button(frame_pasta_input, text="📂 Abrir", style='Secondary.TButton', command=self._acao_abrir_pasta)
-        self.btn_abrir_pasta.pack(side=tk.LEFT)
+        self.btn_abrir_pasta = ctk.CTkButton(
+            frame_pasta_inputs,
+            text="📂 Abrir",
+            command=self._acao_abrir_pasta,
+            fg_color=self.BS_SECONDARY,
+            hover_color=self.BS_SECONDARY_HOVER,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            corner_radius=8,
+            height=36,
+            width=75
+        )
+        self.btn_abrir_pasta.pack(side="left")
 
         # ==========================================
-        # 5. BARRA DE PROGRESSO E TELEMETRIA
+        # 5. CARD DE PROGRESSO & TELEMETRIA
         # ==========================================
-        frame_progresso = ttk.Frame(conteiner)
-        frame_progresso.pack(fill=tk.X, pady=(0, 12))
+        card_progresso = ctk.CTkFrame(
+            self.container_principal,
+            fg_color=self.BS_BG_CARD,
+            border_color=self.BS_BORDER_CARD,
+            border_width=1,
+            corner_radius=10
+        )
+        card_progresso.pack(fill="x", pady=(0, 14))
 
-        self.barra_progresso = ttk.Progressbar(frame_progresso, style='Custom.Horizontal.TProgressbar', mode='determinate', maximum=100.0)
-        self.barra_progresso.pack(fill=tk.X, pady=(0, 4))
+        inner_progresso = ctk.CTkFrame(card_progresso, fg_color="transparent")
+        inner_progresso.pack(fill="x", padx=14, pady=12)
 
-        frame_telemetria = ttk.Frame(frame_progresso)
-        frame_telemetria.pack(fill=tk.X)
+        # Barra de Progresso Estilo Bootstrap
+        self.barra_progresso = ctk.CTkProgressBar(
+            inner_progresso,
+            orientation="horizontal",
+            mode="determinate",
+            progress_color=self.BS_PRIMARY,
+            fg_color="#2B303C",
+            height=14,
+            corner_radius=7
+        )
+        self.barra_progresso.pack(fill="x", pady=(0, 8))
+        self.barra_progresso.set(0.0)
 
-        self.lbl_status = ttk.Label(frame_telemetria, text="Pronto para iniciar.", style='Status.TLabel')
-        self.lbl_status.pack(side=tk.LEFT)
+        # Telemetria em Grid / Pills
+        frame_telemetria = ctk.CTkFrame(inner_progresso, fg_color="transparent")
+        frame_telemetria.pack(fill="x")
 
-        self.lbl_tamanho = ttk.Label(frame_telemetria, text="Tamanho: --", style='Telemetry.TLabel')
-        self.lbl_tamanho.pack(side=tk.LEFT, padx=(16, 0))
+        # Status
+        self.lbl_status = ctk.CTkLabel(
+            frame_telemetria,
+            text="● Pronto para iniciar",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            text_color=self.BS_TEXT_WHITE
+        )
+        self.lbl_status.pack(side="left")
 
-        self.lbl_velocidade = ttk.Label(frame_telemetria, text="Velocidade: --", style='Telemetry.TLabel')
-        self.lbl_velocidade.pack(side=tk.LEFT, padx=(16, 0))
+        # ETA (à direita)
+        self.lbl_eta = ctk.CTkLabel(
+            frame_telemetria,
+            text="⏳ Restante: --:--",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            text_color=self.BS_TEXT_MUTED
+        )
+        self.lbl_eta.pack(side="right")
 
-        self.lbl_eta = ttk.Label(frame_telemetria, text="ETA: --", style='Telemetry.TLabel')
-        self.lbl_eta.pack(side=tk.RIGHT)
+        # Tamanho (centro-direita)
+        self.lbl_tamanho = ctk.CTkLabel(
+            frame_telemetria,
+            text="📦 Tamanho: --",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            text_color=self.BS_TEXT_MUTED
+        )
+        self.lbl_tamanho.pack(side="right", padx=(0, 16))
+
+        # Velocidade (centro-esquerda)
+        self.lbl_velocidade = ctk.CTkLabel(
+            frame_telemetria,
+            text="⚡ Velocidade: --",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            text_color=self.BS_TEXT_MUTED
+        )
+        self.lbl_velocidade.pack(side="right", padx=(0, 16))
 
         # ==========================================
-        # 6. BOTÕES DE AÇÃO (Iniciar / Cancelar)
+        # 6. FOOTER / BOTÕES DE AÇÃO PRINCIPAL
         # ==========================================
-        frame_acoes = ttk.Frame(conteiner)
-        frame_acoes.pack(fill=tk.X, pady=(4, 0))
+        frame_acoes = ctk.CTkFrame(self.container_principal, fg_color="transparent")
+        frame_acoes.pack(fill="x")
 
-        self.btn_download = ttk.Button(frame_acoes, text="⬇  Iniciar Download", style='Primary.TButton', command=self._acao_iniciar_download)
-        self.btn_download.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8), ipady=4)
+        self.btn_download = ctk.CTkButton(
+            frame_acoes,
+            text="⬇  Iniciar Download",
+            command=self._acao_iniciar_download,
+            fg_color=self.BS_PRIMARY,
+            hover_color=self.BS_PRIMARY_HOVER,
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
+            corner_radius=8,
+            height=44
+        )
+        self.btn_download.pack(side="left", fill="x", expand=True, padx=(0, 10))
 
-        self.btn_cancelar = ttk.Button(frame_acoes, text="⏹ Cancelar", style='Danger.TButton', command=self._acao_cancelar_download, state=tk.DISABLED)
-        self.btn_cancelar.pack(side=tk.RIGHT, ipady=4)
+        self.btn_cancelar = ctk.CTkButton(
+            frame_acoes,
+            text="⏹ Cancelar",
+            command=self._acao_cancelar_download,
+            fg_color=self.BS_DANGER,
+            hover_color=self.BS_DANGER_HOVER,
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
+            corner_radius=8,
+            height=44,
+            width=130,
+            state="disabled"
+        )
+        self.btn_cancelar.pack(side="right")
 
-    def _criar_menu_contexto(self, widget: tk.Widget):
-        """Cria menu de contexto com botão direito do mouse."""
-        menu = tk.Menu(widget, tearoff=0, bg=self.BG_INPUT, fg=self.TEXT_PRIMARY,
-                       activebackground=self.ACCENT_CYAN, activeforeground='white', borderwidth=1)
+    def _criar_menu_contexto(self, widget):
+        """Adiciona menu de contexto com botão direito do mouse."""
+        menu = tk.Menu(
+            self,
+            tearoff=0,
+            bg=self.BS_BG_INPUT,
+            fg=self.BS_TEXT_WHITE,
+            activebackground=self.BS_PRIMARY,
+            activeforeground="white",
+            borderwidth=1
+        )
         menu.add_command(label="Colar", command=self._acao_colar_url)
         menu.add_command(label="Copiar", command=lambda: widget.event_generate('<<Copy>>'))
         menu.add_command(label="Recortar", command=lambda: widget.event_generate('<<Cut>>'))
@@ -316,9 +500,9 @@ class InterfaceYouTube:
         widget.bind("<Button-3>", exibir_popup)
 
     def _acao_colar_url(self):
-        """Cola conteúdo da área de transferência e busca metadados automaticamente."""
+        """Cola conteúdo da área de transferência e busca informações automaticamente."""
         try:
-            conteudo = self.janela.clipboard_get().strip()
+            conteudo = self.clipboard_get().strip()
             if conteudo:
                 self.var_url.set(conteudo)
                 self._buscar_metadados_assincrono(conteudo)
@@ -326,19 +510,19 @@ class InterfaceYouTube:
             pass
 
     def _acao_limpar_url(self):
-        """Limpa campo de URL e reseta a prévia."""
+        """Limpa o campo de URL e reseta o card de prévia."""
         self.var_url.set("")
-        self.lbl_prev_titulo.config(text="Cole um link acima para identificar a mídia...")
-        self.lbl_prev_detalhes.config(text="Plataformas suportadas: YouTube, Instagram, Facebook, TikTok, etc.")
+        self.lbl_prev_titulo.configure(text="Cole um link acima para identificar a mídia...")
+        self.lbl_info_detalhes.configure(text="Suporta: YouTube, Instagram, Facebook, TikTok, Twitter/X, SoundCloud e mais.")
 
     def _buscar_metadados_assincrono(self, url: str):
-        """Dispara busca assíncrona de informações do vídeo."""
+        """Dispara busca assíncrona de informações do vídeo sem travar a interface."""
         valido, _ = BaixadorYouTube.validar_url(url)
         if not valido:
             return
 
-        self.lbl_prev_titulo.config(text="Buscando informações da mídia...")
-        self.lbl_prev_detalhes.config(text="Aguarde...")
+        self.lbl_prev_titulo.configure(text="⏳ Identificando mídia e obtendo dados...")
+        self.lbl_info_detalhes.configure(text="Aguarde um instante...")
 
         def tarefa():
             info = self.baixador.obter_info_video(url)
@@ -347,13 +531,13 @@ class InterfaceYouTube:
         threading.Thread(target=tarefa, daemon=True).start()
 
     def _acao_selecionar_pasta(self):
-        """Abre diálogo para seleção da pasta de destino."""
+        """Abre diálogo para seleção de pasta de destino."""
         pasta = filedialog.askdirectory(initialdir=self.var_pasta.get())
         if pasta:
             self.var_pasta.set(pasta)
 
     def _acao_abrir_pasta(self):
-        """Abre a pasta de destino no gerenciador de arquivos do sistema operacional."""
+        """Abre a pasta de destino no Windows Explorer ou gerenciador padrão."""
         caminho = self.var_pasta.get()
         if not os.path.exists(caminho):
             os.makedirs(caminho, exist_ok=True)
@@ -368,11 +552,11 @@ class InterfaceYouTube:
             messagebox.showwarning("Aviso", f"Não foi possível abrir a pasta:\n{e}")
 
     def _enfileirar_progresso(self, dados: Dict[str, Any]):
-        """Callback thread-safe para enfileirar atualizações de progresso."""
+        """Callback seguro para repassar dados da thread de download para a interface."""
         self.fila_gui.put(('progress', dados))
 
     def _iniciar_escuta_fila(self):
-        """Loop contínuo no thread principal para processar mensagens da GUI."""
+        """Consome eventos da fila de interface de forma contínua e não-bloqueante."""
         try:
             while not self.fila_gui.empty():
                 tipo, dados = self.fila_gui.get_nowait()
@@ -388,40 +572,43 @@ class InterfaceYouTube:
         except queue.Empty:
             pass
         finally:
-            self.janela.after(50, self._iniciar_escuta_fila)
+            self.after(50, self._iniciar_escuta_fila)
 
     def _atualizar_ui_progresso(self, d: Dict[str, Any]):
-        """Atualiza a barra de progresso e rótulos de telemetria na interface gráfica."""
+        """Atualiza a barra de progresso e as métricas de telemetria."""
         status = d.get('status')
-        percent = d.get('percent', 0.0)
+        percent_float = d.get('percent', 0.0)
 
-        self.barra_progresso['value'] = percent
+        # CustomTkinter espera valores de 0.0 a 1.0
+        self.barra_progresso.set(percent_float / 100.0)
 
         if status == 'downloading':
-            self.lbl_status.config(text=f"Baixando... {d.get('percent_str', '')}")
-            self.lbl_velocidade.config(text=f"Velocidade: {d.get('speed_str', '--')}")
-            self.lbl_tamanho.config(text=f"Tamanho: {d.get('size_str', '--')}")
-            self.lbl_eta.config(text=f"ETA: {d.get('eta_str', '--')}")
+            self.lbl_status.configure(text=f"⬇ Baixando... {d.get('percent_str', '')}", text_color=self.BS_PRIMARY)
+            self.lbl_velocidade.configure(text=f"⚡ Velocidade: {d.get('speed_str', '--')}")
+            self.lbl_tamanho.configure(text=f"📦 Tamanho: {d.get('size_str', '--')}")
+            self.lbl_eta.configure(text=f"⏳ Restante: {d.get('eta_str', '--')}")
         elif status == 'finished' or status == 'completed':
-            self.lbl_status.config(text="Processando / Concluído!")
-            self.lbl_velocidade.config(text="Velocidade: --")
-            self.lbl_eta.config(text="ETA: 00:00")
+            self.lbl_status.configure(text="✓ Processamento Concluído!", text_color=self.BS_SUCCESS)
+            self.lbl_velocidade.configure(text="⚡ Velocidade: Concluído")
+            self.lbl_eta.configure(text="⏳ Restante: 00:00")
 
     def _atualizar_ui_metadata(self, info: Dict[str, Any]):
-        """Atualiza o card de prévia com os metadados recebidos."""
+        """Atualiza o card de prévia com os metadados do vídeo identificado."""
         if 'erro' in info:
-            self.lbl_prev_titulo.config(text="Link detectado (Prévia indisponível)")
-            self.lbl_prev_detalhes.config(text=f"Aviso: {info['erro']}")
+            self.lbl_prev_titulo.configure(text="Link detectado (Prévia indisponível)")
+            self.lbl_info_detalhes.configure(text=f"Aviso: {info['erro']}")
         else:
             titulo = info.get('title', 'Vídeo sem título')
             autor = info.get('uploader', 'Desconhecido')
             duracao = info.get('duration_str', 'N/A')
             origem = info.get('extractor', 'Web')
-            self.lbl_prev_titulo.config(text=f"🎬 {titulo}")
-            self.lbl_prev_detalhes.config(text=f"👤 Canal: {autor}   |   ⏱️ Duração: {duracao}   |   🌐 Origem: {origem}")
+            self.lbl_prev_titulo.configure(text=f"🎬 {titulo}")
+            self.lbl_info_detalhes.configure(
+                text=f"👤 Canal: {autor}   •   ⏱️ Duração: {duracao}   •   🌐 Plataforma: {origem}"
+            )
 
     def _acao_iniciar_download(self):
-        """Inicia o processo de download em uma thread secundária."""
+        """Inicia o fluxo de download assíncrono."""
         url = self.var_url.get().strip()
         pasta = self.var_pasta.get().strip()
         qualidade = self.var_qualidade.get()
@@ -432,18 +619,18 @@ class InterfaceYouTube:
             return
 
         if not pasta:
-            messagebox.showerror("Erro de Destino", "Selecione uma pasta para salvar o arquivo.")
+            messagebox.showerror("Erro de Destino", "Selecione uma pasta de destino válida.")
             return
 
-        # Bloqueia UI e habilita botão de cancelamento
+        # Atualiza o estado da interface
         self.download_em_andamento = True
-        self.btn_download.config(state=tk.DISABLED)
-        self.btn_cancelar.config(state=tk.NORMAL)
-        self.barra_progresso['value'] = 0
-        self.lbl_status.config(text="Iniciando download...")
-        self.lbl_velocidade.config(text="Velocidade: Calculando...")
-        self.lbl_tamanho.config(text="Tamanho: Conectando...")
-        self.lbl_eta.config(text="ETA: --")
+        self.btn_download.configure(state="disabled")
+        self.btn_cancelar.configure(state="normal")
+        self.barra_progresso.set(0.0)
+        self.lbl_status.configure(text="● Conectando e baixando mídia...", text_color=self.BS_PRIMARY)
+        self.lbl_velocidade.configure(text="⚡ Velocidade: Calculando...")
+        self.lbl_tamanho.configure(text="📦 Tamanho: Conectando...")
+        self.lbl_eta.configure(text="⏳ Restante: --:--")
 
         def worker():
             sucesso, resultado = self.baixador.baixar_video(url, pasta, qualidade)
@@ -453,47 +640,47 @@ class InterfaceYouTube:
         self.thread_ativa.start()
 
     def _acao_cancelar_download(self):
-        """Solicita o cancelamento seguro do download em andamento."""
+        """Solicita o cancelamento seguro do download."""
         if self.download_em_andamento:
-            self.lbl_status.config(text="Cancelando download...")
+            self.lbl_status.configure(text="⚠ Cancelando download...", text_color=self.BS_DANGER)
             self.baixador.cancelar_download()
-            self.btn_cancelar.config(state=tk.DISABLED)
+            self.btn_cancelar.configure(state="disabled")
 
     def _finalizar_download(self, sucesso: bool, mensagem: str):
-        """Restaura o estado da UI e exibe o resultado do download."""
+        """Restaura os botões da interface e exibe aviso de resultado."""
         self.download_em_andamento = False
-        self.btn_download.config(state=tk.NORMAL)
-        self.btn_cancelar.config(state=tk.DISABLED)
+        self.btn_download.configure(state="normal")
+        self.btn_cancelar.configure(state="disabled")
 
         if sucesso:
-            self.lbl_status.config(text="Download concluído com sucesso!")
-            messagebox.showinfo("Sucesso", mensagem)
+            self.lbl_status.configure(text="✓ Download concluído com sucesso!", text_color=self.BS_SUCCESS)
+            messagebox.showinfo("Download Concluído", mensagem)
         else:
-            self.lbl_status.config(text="Falha ou cancelamento.")
             if "cancelado" in mensagem.lower():
+                self.lbl_status.configure(text="⚠ Download cancelado pelo usuário.", text_color=self.BS_DANGER)
                 messagebox.showwarning("Cancelado", mensagem)
             else:
+                self.lbl_status.configure(text="✕ Falha no download.", text_color=self.BS_DANGER)
                 messagebox.showerror("Erro no Download", mensagem)
 
     def _ao_fechar_janela(self):
-        """Gerencia o encerramento seguro caso haja download em execução."""
+        """Gerencia o fechamento seguro enquanto houver downloads em execução."""
         if self.download_em_andamento:
             resposta = messagebox.askyesno(
                 "Download em Execução",
-                "Existe um download em andamento. Deseja realmente cancelar e sair?"
+                "Existe um download em andamento. Deseja cancelar e fechar a aplicação?"
             )
             if resposta:
                 self.baixador.cancelar_download()
-                self.janela.destroy()
+                self.destroy()
         else:
-            self.janela.destroy()
+            self.destroy()
 
 
 def main():
-    """Função de entrada da aplicação."""
-    janela = ThemedTk(theme="clam")
-    app = InterfaceYouTube(janela)
-    janela.mainloop()
+    """Inicializa a interface moderna CustomTkinter."""
+    app = InterfaceYouTube()
+    app.mainloop()
 
 
 if __name__ == "__main__":

@@ -4,9 +4,11 @@
 # Mecanismo de download de mídias (YouTube, Instagram, Facebook, TikTok, etc.)
 yt-dlp>=2025.1.15
 
+# Interface gráfica moderna com suporte a temas e componentes estilo Bootstrap
+customtkinter>=6.0.0
+
 # Manipulação de imagens e ícones para a interface gráfica
 Pillow>=10.0.0
 
-# Temas visuais modernos para a interface Tkinter
+# Suporte adicional para temas Tkinter
 ttkthemes>=3.2.2
-
