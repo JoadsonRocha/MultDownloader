@@ -9,3 +9,4 @@ Pillow>=10.0.0
 
 # Temas visuais modernos para a interface Tkinter
 ttkthemes>=3.2.2
+
